@@ -1,0 +1,70 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class PlayerMovement : MonoBehaviour
+{
+    public SpriteRenderer Spriterend;
+    [SerializeField] private LayerMask ground;
+    public Rigidbody2D _rigidBody;
+    public int speed = 25;
+    public int thrust = 25;
+    public bool canChangeGravity = true;
+    private CapsuleCollider2D coll;
+    Scene currentscene;
+    string scenename;
+    public bool FacingRight = false;
+    public GameObject player;
+
+    void Start()
+    {
+        _rigidBody = GetComponent<Rigidbody2D>();
+
+        coll = GetComponent<CapsuleCollider2D>();
+    }
+
+    void Update()
+    {
+        currentscene = SceneManager.GetActiveScene();
+        scenename = currentscene.name;
+
+        float deltaX = Input.GetAxis("Horizontal") * speed * Time.fixedDeltaTime;
+        Vector2 movement = new Vector2(deltaX, _rigidBody.velocity.y);
+        _rigidBody.velocity = movement;
+
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded() || Input.GetKeyDown(KeyCode.UpArrow) && IsGrounded())
+        {
+            _rigidBody.AddForce(Vector3.up * thrust * Time.fixedDeltaTime);
+        }
+        if (FacingRight == true && Input.GetKeyDown(KeyCode.D))
+        {
+            transform.Rotate(0, 180, 0);
+            FacingRight = false;
+        }
+        if (FacingRight == false && Input.GetKeyDown(KeyCode.A))
+        {
+            transform.Rotate(0, -180, 0);
+            FacingRight = true;
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(scenename);
+        }
+        
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.tag == "Death")
+        {
+            SceneManager.LoadScene(scenename);
+        }
+    }
+
+    private bool IsGrounded()
+    {
+        return Physics2D.CapsuleCast(coll.bounds.center, coll.bounds.size, 0f, 0, Vector2.down, .1f, ground);
+    }
+}
+
